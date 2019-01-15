@@ -8,15 +8,16 @@ unset_vars() {
 
 assume() {
     $(unset_vars)
-
+    export SESSION_NAME=$(date +%s)
     temp_role=$(aws sts assume-role \
                         --role-arn "$ROLE_ARN" \
-                        --role-session-name "my-task")
+                        --role-session-name "$SESSION_NAME")
 
     if [ $? -eq 0 ]; then
-        echo export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq .Credentials.AccessKeyId | xargs)
-        echo export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq .Credentials.SecretAccessKey | xargs)
-        echo export AWS_SESSION_TOKEN=$(echo $temp_role | jq .Credentials.SessionToken | xargs)
+        export TEMPWORD="AWS"
+        echo export $TEMPWORD"_ACCESS_KEY_ID"=$(echo $temp_role | jq .Credentials.AccessKeyId | xargs)
+        echo export $TEMPWORD"_SECRET_ACCESS_KEY"=$(echo $temp_role | jq .Credentials.SecretAccessKey | xargs)
+        echo export $TEMPWORD"_SESSION_TOKEN"=$(echo $temp_role | jq .Credentials.SessionToken | xargs)
     fi
 }
 
