@@ -18,7 +18,16 @@ resource "aws_iam_role_policy_attachment" "codebuild-project-generic-assume-role
 # Service policy for generic project role
 resource "aws_iam_policy" "codebuild-project-generic-service-policy" {
   name   = "codebuild-project-generic-service-policy"
-  policy = "${file("${path.module}/codebuild-project-generic-service-policy.json")}"
+  policy = "${data.template_file.codebuild-project-generic-service-policy.rendered}"
+}
+
+data "template_file" "codebuild-project-generic-service-policy" {
+  template = "${file("${path.module}/codebuild-project-generic-service-policy.json")}"
+
+  vars {
+    AWS_REGION     = "${var.aws_region}"
+    AWS_ACCOUNT_ID = "${data.aws_caller_identity.current.account_id}"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild-project-generic-service-attachment" {

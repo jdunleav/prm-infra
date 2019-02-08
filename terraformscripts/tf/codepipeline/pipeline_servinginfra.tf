@@ -1,5 +1,10 @@
 resource "aws_codepipeline" "prm-servinginfra-pipeline" {
-  #lifecycle {  #  ignore_changes = ["stage.0.action.0.configuration.OAuthToken", "stage.0.action.0.configuration.%"]  #}
+  lifecycle {  
+   ignore_changes = [
+     #"stage.0.action.0.configuration.OAuthToken", 
+     #"stage.0.action.0.configuration.%"
+   ]  
+  }
 
   name     = "prm-servinginfra-pipeline"
   role_arn = "${aws_iam_role.codepipeline-generic-role.arn}"
@@ -31,6 +36,24 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
   }
 
   stage {
+    name = "Scan_prm-infra_repo"
+
+    action {
+      name            = "Scan"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+      run_order       = 1
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-secscan-prm-infra-scan.name}"
+      }
+    }
+  }
+
+  stage {
     name = "Approve_Infra_Provisioning"
 
     action {
@@ -48,20 +71,6 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
 
   stage {
     name = "Build_Network"
-
-    action {
-      name            = "Plan"
-      category        = "Test"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      version         = "1"
-      input_artifacts = ["source"]
-      run_order       = 1
-
-      configuration {
-        ProjectName = "${aws_codebuild_project.prm-servinginfra-network-plan.name}"
-      }
-    }
 
     action {
       name            = "Apply"
@@ -82,20 +91,6 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
     name = "Build_Opentest"
 
     action {
-      name            = "Plan"
-      category        = "Test"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      version         = "1"
-      input_artifacts = ["source"]
-      run_order       = 1
-
-      configuration {
-        ProjectName = "${aws_codebuild_project.prm-servinginfra-opentest-plan.name}"
-      }
-    }
-
-    action {
       name            = "Apply"
       category        = "Build"
       owner           = "AWS"
@@ -114,20 +109,6 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
     name = "Build_Lambdas"
 
     action {
-      name            = "Plan"
-      category        = "Test"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      version         = "1"
-      input_artifacts = ["source"]
-      run_order       = 1
-
-      configuration {
-        ProjectName = "${aws_codebuild_project.prm-servinginfra-lambdas-plan.name}"
-      }
-    }
-
-    action {
       name            = "Apply"
       category        = "Build"
       owner           = "AWS"
@@ -138,6 +119,34 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
 
       configuration {
         ProjectName = "${aws_codebuild_project.prm-servinginfra-lambdas-apply.name}"
+      }
+    }
+
+    action {
+      name            = "Update_Test_Project"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+      run_order       = 3
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-servinginfra-update-test-project.name}"
+      }
+    }
+
+    action {
+      name            = "Test"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+      run_order       = 4
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-servinginfra-lambdas-test.name}"
       }
     }
   }

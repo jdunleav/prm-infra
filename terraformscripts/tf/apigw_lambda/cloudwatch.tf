@@ -11,7 +11,7 @@ resource "aws_cloudwatch_metric_alarm" "prm-gateway-error-4xx" {
   insufficient_data_actions = []
 
   dimensions {
-    ApiName = "${aws_api_gateway_rest_api.ehr_extract_handler_api.name}"
+    ApiName = "${var.api_gateway_endpoint_name}"
   }
 }
 
@@ -28,7 +28,7 @@ resource "aws_cloudwatch_metric_alarm" "prm-gateway-error-5xx" {
   insufficient_data_actions = []
 
   dimensions {
-    ApiName = "${aws_api_gateway_rest_api.ehr_extract_handler_api.name}"
+    ApiName = "${var.api_gateway_endpoint_name}"
   }
 }
 
@@ -45,8 +45,8 @@ resource "aws_cloudwatch_metric_alarm" "prm-lambda-ehr_extract_handler-error" {
   insufficient_data_actions = []
 
   dimensions {
-    FunctionName = "${aws_lambda_function.ehr_extract_handler.function_name}"
-    Resource     = "${aws_lambda_function.ehr_extract_handler.function_name}"
+    FunctionName = "${module.apigw_lambda_ehr_extract_handler.lambda_function_name}"
+    Resource     = "${module.apigw_lambda_ehr_extract_handler.lambda_function_name}"
   }
 }
 
@@ -58,7 +58,7 @@ resource "aws_cloudwatch_event_rule" "every_min_rule" {
 
 resource "aws_cloudwatch_event_target" "every_minute_event_target" {
   rule = "${aws_cloudwatch_event_rule.every_min_rule.name}"
-  arn  = "${aws_lambda_function.uptime_monitoring.arn}"
+  arn  = "${module.apigw_lambda_uptime_monitoring.lambda_function_arn}"
 }
 
 resource "aws_iam_role" "cloudwatch-apigateway-log-role" {

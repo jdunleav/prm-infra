@@ -1,5 +1,10 @@
 resource "aws_codepipeline" "lambda-pipeline" {
-  #lifecycle {  #  ignore_changes = [  #    "stage.0.action.0.configuration.OAuthToken",  #    "stage.0.action.0.configuration.%",  #  ]  #}
+  lifecycle {  
+   ignore_changes = [  
+     "stage.0.action.0.configuration.OAuthToken",  
+     "stage.0.action.0.configuration.%",  
+   ]  
+  }
 
   name     = "prm-lambda-pipeline"
   role_arn = "${aws_iam_role.codepipeline-generic-role.arn}"
@@ -31,6 +36,42 @@ resource "aws_codepipeline" "lambda-pipeline" {
   }
 
   stage {
+    name = "Scan_prm-migrator_repo"
+
+    action {
+      name            = "Scan-Dependencies"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+      #run_order       = 1
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-secscan-prm-migrator-scan.name}"
+      }
+    }
+  }
+
+  stage {
+    name = "Scan_prm-migrator_repo_java"
+
+    action {
+      name            = "Scan-Dependencies-Java"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+      #run_order       = 1
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-secscan-prm-migrator-scanjava.name}"
+      }
+    }
+  }
+
+  stage {
     name = "Test-Lambdas"
 
     action {
@@ -43,6 +84,45 @@ resource "aws_codepipeline" "lambda-pipeline" {
 
       configuration {
         ProjectName = "${aws_codebuild_project.prm-test-ehr-extract-lambda.name}"
+      }
+    }
+
+    action {
+      name            = "Test-Retrieve-Status"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-test-retrieve-status-lambda.name}"
+      }
+    }
+
+    action {
+      name            = "Test-Retrieve-Processed-Ehr-Extract"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-test-retrieve-processed-ehr-extract-lambda.name}"
+      }
+    }
+
+    action {
+      name            = "Test-Translator"
+      category        = "Test"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-test-translator-lambda.name}"
       }
     }
   }
@@ -99,6 +179,19 @@ resource "aws_codepipeline" "lambda-pipeline" {
 
       configuration {
         ProjectName = "${aws_codebuild_project.prm-build-retrieve-processed-ehr-extract-lambda.name}"
+      }
+    }
+
+    action {
+      name            = "Build-Translator"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      version         = "1"
+      input_artifacts = ["source"]
+
+      configuration {
+        ProjectName = "${aws_codebuild_project.prm-build-translator-lambda.name}"
       }
     }
   }
