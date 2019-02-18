@@ -53,21 +53,21 @@ resource "aws_codepipeline" "prm-servinginfra-pipeline" {
     }
   }
 
-  stage {
-    name = "Approve_Infra_Provisioning"
+  # stage {
+  #   name = "Approve_Infra_Provisioning"
 
-    action {
-      name     = "Approve_Infra_Provisioning"
-      category = "Approval"
-      owner    = "AWS"
-      provider = "Manual"
-      version  = "1"
+  #   action {
+  #     name     = "Approve_Infra_Provisioning"
+  #     category = "Approval"
+  #     owner    = "AWS"
+  #     provider = "Manual"
+  #     version  = "1"
 
-      configuration {
-        CustomData = "Approve_Infra_Provisioning"
-      }
-    }
-  }
+  #     configuration {
+  #       CustomData = "Approve_Infra_Provisioning"
+  #     }
+  #   }
+  # }
 
   stage {
     name = "Build_Network"
